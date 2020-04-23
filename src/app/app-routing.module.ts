@@ -6,6 +6,7 @@ import { PathNotFoundComponent } from './path-not-found/path-not-found.component
 import { RecipeStartComponent } from './recipes/recipe-start/recipe-start.component';
 import { RecipesDetailComponent } from './recipes/recipes-detail/recipes-detail.component';
 import { RecipeEditComponent } from './recipes/recipe-edit/recipe-edit.component';
+import { RecipesResolverService } from './recipes/recipes-resolver.service';
 
 const routes: Routes = [
   { path: '', redirectTo: '/recipes', pathMatch: 'full' },
@@ -24,10 +25,12 @@ const routes: Routes = [
       {
         path: ':id',
         component: RecipesDetailComponent,
+        resolve: [RecipesResolverService],
       },
       {
         path: ':id/edit-recipe',
         component: RecipeEditComponent,
+        resolve: [RecipesResolverService],
       },
     ],
   },
