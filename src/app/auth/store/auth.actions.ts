@@ -52,6 +52,10 @@ export class AutoLogin implements Action {
     readonly type = AUTO_LOGIN;
 }
 
+export class AutoLogout implements Action {
+    readonly type = AUTO_LOGOUT;
+}
+
 export type AuthActionsTypes =
     | AuthenticateSuccess
     | Logout

@@ -1,18 +1,10 @@
+import { AuthService } from "./../auth.service";
 import { User } from "./../user.model";
 import { HttpClient, HttpErrorResponse } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 import { Router } from "@angular/router";
 import { Actions, createEffect, ofType } from "@ngrx/effects";
-import {
-    catchError,
-    EMPTY,
-    map,
-    Observable,
-    of,
-    pipe,
-    switchMap,
-    tap,
-} from "rxjs";
+import { catchError, map, of, switchMap, tap } from "rxjs";
 import { environment } from "src/environments/environment";
 import * as AuthActions from "./auth.actions";
 
@@ -38,7 +30,8 @@ export class AuthEffects {
     constructor(
         private actions$: Actions,
         private http: HttpClient,
-        private router: Router
+        private router: Router,
+        private authService: AuthService
     ) {}
 
     authSignUp$ = createEffect(() =>
@@ -46,6 +39,11 @@ export class AuthEffects {
             ofType(AuthActions.SIGNUP_START),
             switchMap((signupAction: AuthActions.SignupStart) =>
                 this.makeLoginRequest(signupAction, SIGNUP_URL).pipe(
+                    tap((resData: AuthResponseData) =>
+                        this.authService.setLogoutTimer(
+                            +resData.expiresIn * 1000
+                        )
+                    ),
                     map((authData: AuthResponseData) =>
                         this.handleAuthenticationSuccess(authData)
                     ),
@@ -62,6 +60,11 @@ export class AuthEffects {
             ofType(AuthActions.LOGIN_START),
             switchMap((authData: AuthActions.LoginStart) =>
                 this.makeLoginRequest(authData, LOGIN_URL).pipe(
+                    tap((resData: AuthResponseData) => {
+                        this.authService.setLogoutTimer(
+                            +resData.expiresIn * 1000
+                        );
+                    }),
                     map((resData: AuthResponseData) =>
                         this.handleAuthenticationSuccess(resData)
                     ),
@@ -134,8 +137,17 @@ export class AuthEffects {
     authLogout$ = createEffect(
         () =>
             this.actions$.pipe(
-                ofType(AuthActions.LOGOUT),
-                tap(() => localStorage.removeItem("userData"))
+                ofType(AuthActions.LOGOUT, AuthActions.AUTO_LOGOUT),
+                tap(() => {
+                    console.log("clear timer");
+                    this.authService.clearLogoutTimer();
+                    console.log("clear clear localstorage");
+
+                    localStorage.removeItem("userData");
+                    console.log("navigate");
+
+                    this.router.navigate(["/auth"]);
+                })
             ),
         { dispatch: false }
     );
@@ -151,7 +163,7 @@ export class AuthEffects {
                     _tokenExpirationDate: string;
                 } = JSON.parse(localStorage.getItem("userData"));
                 if (!userData) {
-                    return { type: "" };
+                    return { type: "Nothing" };
                 }
 
                 const loadedUser = new User(
@@ -163,19 +175,20 @@ export class AuthEffects {
 
                 if (loadedUser.token) {
                     // this.user.next(loadedUser);
+                    const expirationDuration =
+                        new Date(userData._tokenExpirationDate).getTime() -
+                        new Date().getTime();
+                    // this.autoLogout(expirationDuration);
+                    this.authService.setLogoutTimer(expirationDuration);
+
                     return new AuthActions.AuthenticateSuccess({
                         email: loadedUser.email,
                         userId: loadedUser.id,
                         token: loadedUser.token,
                         expirationDate: new Date(userData._tokenExpirationDate),
                     });
-
-                    // const expirationDuration =
-                    //     new Date(userData._tokenExpirationDate).getTime() -
-                    //     new Date().getTime();
-                    // this.autoLogout(expirationDuration);
                 }
-                return { type: "" };
+                return { type: "Nothing" };
             })
         )
     );

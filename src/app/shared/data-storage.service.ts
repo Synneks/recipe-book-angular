@@ -50,8 +50,6 @@ export class DataStorageService {
                     });
                 }),
                 tap((recipes) => {
-                    console.warn("fac caca");
-
                     this.recipeService.setRecipes(recipes);
                 })
             );
