@@ -1,3 +1,4 @@
+import * as RecipesActions from "./../recipes/store/recipe.actions";
 import { Component, OnInit, OnDestroy } from "@angular/core";
 import { map, Subscription } from "rxjs";
 
@@ -35,7 +36,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
     }
 
     onFetchData() {
-        this.dataStorageService.fetchRecipes().subscribe();
+        this.store.dispatch(new RecipesActions.FetchRecipes());
     }
 
     onLogout() {
