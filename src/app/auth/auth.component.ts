@@ -115,7 +115,7 @@ export class AuthComponent implements OnInit, OnDestroy {
             hostViewContainerRef.createComponent(alertCmpFactory);
 
         componentRef.instance.message = message;
-        this.closeSub = componentRef.instance.close.subscribe(() => {
+        this.closeSub = componentRef.instance.closeAlert.subscribe(() => {
             this.closeSub.unsubscribe();
             hostViewContainerRef.clear();
         });
