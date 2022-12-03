@@ -9,21 +9,28 @@ import {
 } from "@angular/router";
 
 import { Recipe } from "./recipe.model";
-import { DataStorageService } from "../shared/data-storage.service";
-import { RecipeService } from "./recipe.service";
 import * as fromApp from "../store/app.reducer";
-import { take } from "rxjs";
+import { map, of, switchMap, take } from "rxjs";
 @Injectable({ providedIn: "root" })
-export class RecipesResolverService implements Resolve<Recipe[]> {
+export class RecipesResolverService implements Resolve<{ recipes: Recipe[] }> {
     constructor(
-        private dataStorageService: DataStorageService,
-        private recipesService: RecipeService,
         private store: Store<fromApp.AppState>,
         private actions$: Actions
     ) {}
 
     resolve(route: ActivatedRouteSnapshot, state: RouterStateSnapshot) {
-        this.store.dispatch(new RecipesActions.FetchRecipes());
-        return this.actions$.pipe(ofType(RecipesActions.SET_RECIPES), take(1));
+        return this.store.select("recipes").pipe(
+            take(1),
+            map((recipeState) => recipeState.recipes),
+            switchMap((recipes) => {
+                if (recipes.length === 0) {
+                    this.store.dispatch(new RecipesActions.FetchRecipes());
+                    return this.actions$.pipe(
+                        ofType(RecipesActions.SET_RECIPES),
+                        take(1)
+                    );
+                } else return of({ recipes });
+            })
+        );
     }
 }

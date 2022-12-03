@@ -12,50 +12,50 @@ import { Store } from "@ngrx/store";
 export class DataStorageService {
     constructor(
         private http: HttpClient,
-        private recipeService: RecipeService,
         private authService: AuthService,
         private store: Store<fromApp.AppState>
     ) {}
 
     storeRecipes() {
-        const recipes = this.recipeService.getRecipes();
-        this.http
-            .put(
-                "https://ng-complete-guide-3310e.firebaseio.com/recipes.json",
-                recipes
-            )
-            .subscribe({
-                next: (response) => {
-                    console.log(response);
-                },
-                error: (error) => {
-                    console.log(error);
-                },
-            });
+        // const recipes = this.recipeService.getRecipes();
+        // this.http
+        //     .put(
+        //         "https://ng-complete-guide-3310e.firebaseio.com/recipes.json",
+        //         recipes
+        //     )
+        //     .subscribe({
+        //         next: (response) => {
+        //             console.log(response);
+        //         },
+        //         error: (error) => {
+        //             console.log(error);
+        //         },
+        //     });
+        this.store.dispatch(new RecipesActions.StoreRecipes());
     }
 
     fetchRecipes() {
-        // return this.store.dispatch(new FetchRecipes());
-        return this.http
-            .get<Recipe[]>(
-                "https://ng-complete-guide-3310e.firebaseio.com/recipes.json"
-            )
-            .pipe(
-                map((recipes) => {
-                    console.log(recipes);
+        this.store.dispatch(new RecipesActions.FetchRecipes());
+        // return this.http
+        //     .get<Recipe[]>(
+        //         "https://ng-complete-guide-3310e.firebaseio.com/recipes.json"
+        //     )
+        //     .pipe(
+        //         map((recipes) => {
+        //             console.log(recipes);
 
-                    return recipes.map((recipe) => {
-                        return {
-                            ...recipe,
-                            ingredients: recipe.ingredients
-                                ? recipe.ingredients
-                                : [],
-                        };
-                    });
-                }),
-                tap((recipes) => {
-                    this.store.dispatch(new RecipesActions.SetRecipes(recipes));
-                })
-            );
+        //             return recipes.map((recipe) => {
+        //                 return {
+        //                     ...recipe,
+        //                     ingredients: recipe.ingredients
+        //                         ? recipe.ingredients
+        //                         : [],
+        //                 };
+        //             });
+        //         }),
+        //         tap((recipes) => {
+        //             this.store.dispatch(new RecipesActions.SetRecipes(recipes));
+        //         })
+        //     );
     }
 }
